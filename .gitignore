@@ -1,0 +1,13 @@
+.env
+data/
+models/
+__pycache__/
+*.pyc
+wear/.gradle/
+wear/build/
+wear/app/build/
+wear/local.properties
+*.jks
+*.keystore
+.idea/
+*.iml

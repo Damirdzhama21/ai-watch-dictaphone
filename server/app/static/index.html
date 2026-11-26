@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Диктофон</title>
+<meta name="theme-color" content="#f4f2ee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#161615" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Диктофон">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="icon" href="/icon-192.png">
+<style>
+:root {
+  --bg: #f4f2ee; --card: #fffefb; --ink: #1d1c1a; --muted: #6f6c66; --faint: #a3a09a;
+  --line: #e3e0d9; --accent: #c8401c; --accent-soft: #f6e3dc; --ok: #2f7a4b;
+  --r: 14px; --pad: 16px;
+  --safe-b: env(safe-area-inset-bottom, 0px); --safe-t: env(safe-area-inset-top, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #161615; --card: #201f1d; --ink: #edeae4; --muted: #a29e96; --faint: #6e6b65;
+    --line: #2f2e2b; --accent: #ec6a43; --accent-soft: #3a2219; --ok: #5fbf83; }
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); }
+body { font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif; -webkit-text-size-adjust: 100%; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+.wrap { max-width: 720px; margin: 0 auto; padding: calc(var(--safe-t) + 8px) var(--pad) calc(88px + var(--safe-b)); }
+
+/* верх */
+.top { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: calc(var(--safe-t) + 10px) 0 10px; margin-top: calc(-1 * var(--safe-t) - 8px); }
+.top h1 { font-size: 28px; line-height: 1.15; margin: 4px 0 12px; letter-spacing: -0.02em; font-weight: 700; }
+.search { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0 12px; height: 44px; }
+.search svg { flex: none; color: var(--faint); }
+.search input { flex: 1; border: 0; outline: 0; background: transparent; height: 100%; min-width: 0; font-size: 16px; }
+.search button { border: 0; background: none; color: var(--muted); padding: 6px; }
+
+/* список */
+.day { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 22px 2px 8px; }
+.list { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.item { display: block; padding: 14px var(--pad); border-top: 1px solid var(--line); }
+.item:first-child { border-top: 0; }
+.item:active { background: var(--bg); }
+.meta { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--faint); }
+.item h3 { font-size: 16px; font-weight: 600; margin: 3px 0 2px; line-height: 1.3; }
+.item p { margin: 0; color: var(--muted); font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.chip { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 6px; font-size: 12px; font-weight: 600; background: var(--accent-soft); color: var(--accent); }
+.chip.grey { background: var(--line); color: var(--muted); }
+.more { display: block; width: 100%; margin: 16px 0; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--muted); }
+.empty { text-align: center; color: var(--muted); padding: 60px 20px; }
+.empty b { display: block; color: var(--ink); font-size: 17px; margin-bottom: 6px; }
+
+/* карточка записи */
+.back { display: inline-flex; align-items: center; gap: 4px; border: 0; background: none; color: var(--accent); padding: 8px 0; font-size: 16px; margin-left: -4px; }
+.rec-h { font-size: 24px; line-height: 1.2; letter-spacing: -0.015em; margin: 6px 0 6px; font-weight: 700; }
+.rec-h button { border: 0; background: none; padding: 0 0 0 6px; color: var(--faint); vertical-align: 2px; }
+.player { position: sticky; top: calc(var(--safe-t)); z-index: 4; background: var(--bg); padding: 12px 0; }
+.pl { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 14px 10px 10px; }
+.play { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--accent); color: #fff; display: grid; place-items: center; }
+.bar { flex: 1; min-width: 0; }
+.bar input { width: 100%; accent-color: var(--accent); margin: 0; }
+.times { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.speed { flex: none; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; height: 30px; min-width: 46px; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+section { margin-top: 22px; }
+section h2 { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 2px 8px; }
+.box { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 14px var(--pad); }
+.box p { margin: 0; }
+.box ul { margin: 0; padding-left: 18px; }
+.box li + li { margin-top: 6px; }
+.task { display: flex; gap: 12px; align-items: flex-start; padding: 12px var(--pad); border-top: 1px solid var(--line); }
+.task:first-child { border-top: 0; }
+.task .ck { flex: none; width: 24px; height: 24px; border-radius: 7px; border: 2px solid var(--faint); background: none; display: grid; place-items: center; margin-top: 1px; padding: 0; }
+.task.done .ck { background: var(--ok); border-color: var(--ok); color: #fff; }
+.task.done .tx { color: var(--faint); text-decoration: line-through; }
+.task .tx { flex: 1; min-width: 0; }
+.due { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 1px; font-variant-numeric: tabular-nums; }
+.due.today { color: var(--accent); }
+.due.late { color: var(--accent); }
+.task .src { display: block; font-size: 13px; color: var(--muted); margin-top: 3px; }
+.tr { padding: 4px 0; }
+.line { display: flex; align-items: flex-start; gap: 10px; padding: 8px var(--pad); }
+.line + .line { border-top: 1px solid var(--line); }
+.line .ts { flex: none; border: 0; background: none; padding: 0; color: var(--accent); font-size: 13px; font-variant-numeric: tabular-nums; font-weight: 600; min-width: 42px; text-align: left; line-height: 1.6; }
+.line.now { background: var(--accent-soft); }
+.danger { display: block; width: 100%; margin-top: 28px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: none; color: var(--accent); }
+.note { font-size: 14px; color: var(--muted); }
+.seg { display: inline-flex; background: var(--line); border-radius: 10px; padding: 3px; margin-bottom: 4px; }
+.seg button { border: 0; background: none; height: 32px; padding: 0 14px; border-radius: 8px; font-size: 14px; color: var(--muted); }
+.seg button.on { background: var(--card); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+
+/* низ */
+nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--line); padding-bottom: var(--safe-b); }
+nav .in { max-width: 720px; margin: 0 auto; display: flex; }
+nav a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0 6px; font-size: 11px; font-weight: 600; color: var(--faint); }
+nav a.on { color: var(--accent); }
+nav a span.n { position: absolute; margin-left: 22px; margin-top: -2px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: #fff; font-size: 11px; line-height: 18px; text-align: center; }
+
+/* вход */
+.login { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.login form { width: 100%; max-width: 340px; }
+.login .mark { width: 56px; height: 56px; border-radius: 16px; background: var(--ink); display: grid; place-items: center; margin-bottom: 18px; }
+.login .mark i { width: 18px; height: 18px; border-radius: 50%; background: var(--accent); display: block; }
+.login h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.02em; }
+.login p { color: var(--muted); margin: 0 0 20px; }
+.login input { width: 100%; height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); padding: 0 14px; font-size: 16px; outline: 0; }
+.login input:focus { border-color: var(--accent); }
+.login button { width: 100%; height: 48px; margin-top: 10px; border-radius: 12px; border: 0; background: var(--ink); color: var(--bg); font-weight: 600; }
+.err { color: var(--accent); font-size: 14px; min-height: 20px; margin-top: 10px; }
+.toast { position: fixed; left: 50%; bottom: calc(84px + var(--safe-b)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; z-index: 9; max-width: 90vw; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+'use strict';
+const $app = document.getElementById('app');
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ICON = {
+  search: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  x: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  back: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+  play: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l11-6.5a1 1 0 0 0 0-1.72l-11-6.5A1 1 0 0 0 8 5.5Z"/></svg>',
+  pause: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
+  check: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>',
+  edit: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  recs: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  tasks: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>',
+};
+
+async function api(path, opt = {}) {
+  const r = await fetch(path, { credentials: 'same-origin', headers: opt.body ? { 'Content-Type': 'application/json' } : {}, ...opt });
+  if (r.status === 401 && path !== '/api/login') { showLogin(); throw new Error('auth'); }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.detail || ('Ошибка ' + r.status));
+  return j;
+}
+function toast(t) {
+  const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d);
+  setTimeout(() => d.remove(), 2600);
+}
+
+/* время: записи хранятся в местном времени часов (Алматы), без пояса */
+const MES = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+const DN = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+function parseLocal(s) { const m = /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d)/.exec(s || ''); return m ? new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5]) : null; }
+function almatyToday() { const n = new Date(Date.now() + (new Date().getTimezoneOffset() + 300) * 60000); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
+function dayLabel(d) {
+  const t = almatyToday(); const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diff = Math.round((t - dd) / 86400000);
+  if (diff === 0) return 'Сегодня';
+  if (diff === 1) return 'Вчера';
+  return `${d.getDate()} ${MES[d.getMonth()]}${d.getFullYear() !== t.getFullYear() ? ' ' + d.getFullYear() : ''}, ${DN[d.getDay()]}`;
+}
+const hm = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+function dur(sec) { sec = Math.round(sec || 0); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60; return h ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${m}:${String(s).padStart(2, '0')}`; }
+function durWords(sec) { const m = Math.round((sec || 0) / 60); return m < 1 ? 'меньше минуты' : m + ' мин'; }
+function plural(n, a, b, c) { const k = n % 10, h = n % 100; return n + ' ' + (k === 1 && h !== 11 ? a : k >= 2 && k <= 4 && (h < 12 || h > 14) ? b : c); }
+
+/* ---------- вход ---------- */
+function showLogin() {
+  document.querySelector('nav')?.remove();
+  $app.innerHTML = `<div class="login"><form id="lf">
+    <div class="mark"><i></i></div>
+    <h1>Диктофон</h1><p>Записи с часов: расшифровка, сводка, задачи.</p>
+    <input id="pw" type="password" autocomplete="current-password" placeholder="Пароль" required>
+    <button>Войти</button><div class="err" id="er"></div></form></div>`;
+  document.getElementById('lf').onsubmit = async (e) => {
+    e.preventDefault();
+    try { await api('/api/login', { method: 'POST', body: JSON.stringify({ password: document.getElementById('pw').value }) }); route(); }
+    catch (err) { document.getElementById('er').textContent = err.message; }
+  };
+}
+
+/* ---------- навигация ---------- */
+let openTasks = 0;
+function nav(active) {
+  let n = document.querySelector('nav');
+  if (!n) { n = document.createElement('nav'); document.body.appendChild(n); }
+  n.innerHTML = `<div class="in">
+    <a href="#/" class="${active === 'recs' ? 'on' : ''}">${ICON.recs}Записи</a>
+    <a href="#/tasks" class="${active === 'tasks' ? 'on' : ''}">${ICON.tasks}${openTasks ? `<span class="n">${openTasks}</span>` : ''}Задачи</a></div>`;
+}
+async function countTasks() { try { openTasks = (await api('/api/tasks')).items.length; } catch (e) { /* не важно */ } }
+
+/* ---------- список ---------- */
+let listState = { q: '', items: [], more: false };
+async function showList() {
+  nav('recs');
+  $app.innerHTML = `<div class="wrap"><div class="top"><h1>Записи</h1>
+    <label class="search">${ICON.search}<input id="q" type="search" enterkeyhint="search" placeholder="Поиск по тексту и сводкам" value="${esc(listState.q)}">
+    <button id="qx" type="button" aria-label="Очистить" style="${listState.q ? '' : 'display:none'}">${ICON.x}</button></label></div>
+    <div id="lst"></div></div>`;
+  const q = document.getElementById('q'), qx = document.getElementById('qx');
+  let tm;
+  q.oninput = () => { clearTimeout(tm); qx.style.display = q.value ? '' : 'none'; tm = setTimeout(() => load(q.value.trim()), 300); };
+  qx.onclick = () => { q.value = ''; qx.style.display = 'none'; load(''); };
+  await load(listState.q);
+}
+async function load(q, append = false) {
+  const off = append ? listState.items.length : 0;
+  const j = await api(`/api/recs?q=${encodeURIComponent(q)}&limit=40&offset=${off}`);
+  listState = { q, items: append ? listState.items.concat(j.items) : j.items, more: j.more };
+  renderList();
+}
+function renderList() {
+  const box = document.getElementById('lst'); if (!box) return;
+  const { items, q, more } = listState;
+  if (!items.length) {
+    box.innerHTML = q ? `<div class="empty"><b>Ничего не нашлось</b>Попробуйте другое слово</div>`
+      : `<div class="empty"><b>Записей пока нет</b>Нажмите кнопку на часах — запись появится здесь через минуту после окончания</div>`;
+    return;
+  }
+  let html = '', cur = '';
+  for (const it of items) {
+    const d = parseLocal(it.recorded);
+    const lab = d ? dayLabel(d) : 'Без даты';
+    if (lab !== cur) { if (cur) html += '</div>'; html += `<div class="day">${esc(lab)}</div><div class="list">`; cur = lab; }
+    const st = it.status === 'done' ? '' : it.status === 'error' ? '<span class="chip">ошибка</span>' : '<span class="chip grey">обрабатывается</span>';
+    html += `<a class="item" href="#/r/${it.id}">
+      <div class="meta">${d ? hm(d) : ''}<span class="dot"></span>${dur(it.duration)}${it.tasks_open ? `<span class="dot"></span><span class="chip">${plural(it.tasks_open, 'задача', 'задачи', 'задач')}</span>` : ''}${st}</div>
+      <h3>${esc(it.title || 'Без темы')}</h3>${it.preview ? `<p>${esc(it.preview)}</p>` : ''}</a>`;
+  }
+  html += '</div>';
+  if (more) html += '<button class="more" id="mr">Показать ещё</button>';
+  box.innerHTML = html;
+  const mr = document.getElementById('mr'); if (mr) mr.onclick = () => load(q, true);
+}
+
+/* ---------- карточка ---------- */
+const SECTIONS = ['Коротко', 'Решения', 'Задачи', 'Цифры и факты', 'Открытые вопросы'];
+function parseSummary(s) {
+  const out = {}; let cur = null;
+  for (const raw of (s || '').split('\n')) {
+    const line = raw.trim(); if (!line) continue;
+    const m = /^([А-ЯЁA-Z][^:]{1,30}):\s*(.*)$/.exec(line);
+    if (m && (SECTIONS.includes(m[1]) || m[1] === 'Тема')) { cur = m[1]; out[cur] = []; if (m[2]) out[cur].push(m[2]); continue; }
+    if (cur) out[cur].push(line.replace(/^[-•—]\s*/, ''));
+  }
+  return out;
+}
+async function showRec(id) {
+  nav('recs');
+  $app.innerHTML = '<div class="wrap"></div>';
+  const r = await api('/api/recs/' + id);
+  const d = parseLocal(r.recorded);
+  const sm = parseSummary(r.summary);
+  let html = `<button class="back" onclick="location.hash = '#/'">${ICON.back}Записи</button>
+    <h1 class="rec-h"><span id="ttl">${esc(r.title || 'Без темы')}</span><button id="ed" aria-label="Переименовать">${ICON.edit}</button></h1>
+    <div class="meta">${d ? esc(dayLabel(d)) + ', ' + hm(d) : ''}<span class="dot"></span>${durWords(r.duration)}<span class="dot"></span>${plural(r.words, 'слово', 'слова', 'слов')}</div>`;
+  if (r.has_audio) html += `<div class="player"><div class="pl">
+      <button class="play" id="pp" aria-label="Играть">${ICON.play}</button>
+      <div class="bar"><input id="sk" type="range" min="0" max="${Math.max(1, Math.round(r.duration))}" step="1" value="0">
+      <div class="times"><span id="tc">0:00</span><span>${dur(r.duration)}</span></div></div>
+      <button class="speed" id="sp">1×</button></div><audio id="au" preload="none" src="/api/recs/${r.id}/audio"></audio></div>`;
+  if (r.status !== 'done') html += `<section><div class="box note">${r.status === 'error' ? 'Не удалось обработать: ' + esc(r.error) : 'Запись ещё обрабатывается — обновите через минуту.'}</div></section>`;
+  if (sm['Коротко']) html += `<section><h2>Коротко</h2><div class="box"><p>${esc(sm['Коротко'].join(' '))}</p></div></section>`;
+  if (r.tasks.length) html += `<section><h2>Задачи</h2><div class="list">${r.tasks.map((t) => taskHtml(t)).join('')}</div></section>`;
+  for (const k of ['Решения', 'Цифры и факты', 'Открытые вопросы']) {
+    if (sm[k] && sm[k].length) html += `<section><h2>${k}</h2><div class="box"><ul>${sm[k].map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div></section>`;
+  }
+  const lines = (r.transcript || '').split('\n').map((l) => /^\[(?:(\d+):)?(\d+):(\d\d)\]\s*(.*)$/.exec(l)).filter(Boolean);
+  if (lines.length) html += `<section><h2>Расшифровка</h2><div class="list tr">${lines.map((m) => {
+    const sec = (+(m[1] || 0)) * 3600 + (+m[2]) * 60 + (+m[3]);
+    return `<div class="line" data-t="${sec}"><button class="ts" data-t="${sec}">${dur(sec)}</button><div>${esc(m[4])}</div></div>`;
+  }).join('')}</div></section>`;
+  else if (r.status === 'done') html += `<section><div class="box note">Речь не распознана — тишина или шум.</div></section>`;
+  html += `<button class="danger" id="del">Удалить запись</button>`;
+  $app.firstChild.innerHTML = html;
+  bindTasks($app);
+  document.getElementById('ed').onclick = async () => {
+    const t = prompt('Название записи', r.title || ''); if (t === null || !t.trim()) return;
+    await api('/api/recs/' + r.id, { method: 'PATCH', body: JSON.stringify({ title: t.trim() }) });
+    document.getElementById('ttl').textContent = t.trim(); r.title = t.trim();
+  };
+  document.getElementById('del').onclick = async () => {
+    if (!confirm('Удалить запись вместе с аудио и расшифровкой? Вернуть не получится.')) return;
+    try { await api('/api/recs/' + r.id, { method: 'DELETE' }); toast('Запись удалена'); location.hash = '#/'; } catch (e) { toast(e.message); }
+  };
+  if (r.has_audio) bindPlayer();
+}
+function bindPlayer() {
+  const au = document.getElementById('au'), pp = document.getElementById('pp'), sk = document.getElementById('sk'),
+    tc = document.getElementById('tc'), sp = document.getElementById('sp');
+  const rows = [...document.querySelectorAll('.line')];
+  let dragging = false, lastNow = null;
+  const SPEEDS = [1, 1.5, 2];
+  pp.onclick = () => { if (au.paused) au.play().catch((e) => toast('Не играет: ' + e.message)); else au.pause(); };
+  au.onplay = () => { pp.innerHTML = ICON.pause; };
+  au.onpause = () => { pp.innerHTML = ICON.play; };
+  au.ontimeupdate = () => {
+    const t = au.currentTime; if (!dragging) sk.value = Math.round(t); tc.textContent = dur(t);
+    let now = null; for (const el of rows) { if (+el.dataset.t <= t + 0.3) now = el; else break; }
+    if (now !== lastNow) { lastNow?.classList.remove('now'); now?.classList.add('now'); lastNow = now; }
+  };
+  sk.oninput = () => { dragging = true; tc.textContent = dur(+sk.value); };
+  sk.onchange = () => { dragging = false; seek(+sk.value, false); };
+  sp.onclick = () => { const i = (SPEEDS.indexOf(au.playbackRate) + 1) % SPEEDS.length; au.playbackRate = SPEEDS[i]; sp.textContent = SPEEDS[i] + '×'; };
+  function seek(t, play = true) {
+    const go = () => { au.currentTime = t; if (play) au.play().catch(() => {}); };
+    if (au.readyState >= 1) go(); else { au.addEventListener('loadedmetadata', go, { once: true }); au.load(); }
+  }
+  document.querySelectorAll('.ts').forEach((b) => { b.onclick = () => seek(+b.dataset.t); });
+}
+
+/* ---------- задачи ---------- */
+function dueHtml(t) {
+  if (!t.due_date || t.done) return '';
+  const m = /^(\d{4})-(\d\d)-(\d\d)$/.exec(t.due_date); if (!m) return '';
+  const dd = new Date(+m[1], m[2] - 1, +m[3]); const today = almatyToday();
+  const diff = Math.round((dd - today) / 86400000);
+  let lab = diff === 0 ? 'сегодня' : diff === 1 ? 'завтра' : diff === -1 ? 'вчера' : `${dd.getDate()} ${MES[dd.getMonth()]}`;
+  if (diff > 1 && diff < 7) lab = DN[dd.getDay()] + ', ' + lab;
+  if (t.due_time) lab += ' ' + t.due_time;
+  const cls = diff < 0 ? 'late' : diff === 0 ? 'today' : '';
+  return `<span class="due ${cls}">${diff < 0 ? 'просрочено · ' : ''}${esc(lab)}</span>`;
+}
+function taskHtml(t, withSrc) {
+  const d = withSrc ? parseLocal(t.recorded) : null;
+  return `<div class="task ${t.done ? 'done' : ''}" data-id="${t.id}">
+    <button class="ck" aria-label="Выполнено">${t.done ? ICON.check : ''}</button>
+    <div class="tx">${dueHtml(t)}${esc(t.text)}${withSrc ? `<a class="src" href="#/r/${t.rec_id}">${d ? esc(dayLabel(d)) + ', ' + hm(d) + ' · ' : ''}${esc(t.title || 'запись')}</a>` : ''}</div></div>`;
+}
+function bindTasks(root, onChange) {
+  root.querySelectorAll('.task .ck').forEach((b) => {
+    b.onclick = async () => {
+      const row = b.closest('.task'); const done = !row.classList.contains('done');
+      row.classList.toggle('done', done); b.innerHTML = done ? ICON.check : '';
+      try { await api('/api/tasks/' + row.dataset.id, { method: 'PATCH', body: JSON.stringify({ done }) }); openTasks += done ? -1 : 1; onChange?.(row, done); }
+      catch (e) { row.classList.toggle('done', !done); b.innerHTML = !done ? ICON.check : ''; toast(e.message); }
+    };
+  });
+}
+let tasksDone = 0;
+async function showTasks() {
+  nav('tasks');
+  $app.innerHTML = `<div class="wrap"><div class="top"><h1>Задачи</h1>
+    <div class="seg"><button data-d="0" class="${tasksDone ? '' : 'on'}">Открытые</button><button data-d="1" class="${tasksDone ? 'on' : ''}">Выполненные</button></div></div><div id="tl"></div></div>`;
+  document.querySelectorAll('.seg button').forEach((b) => { b.onclick = () => { tasksDone = +b.dataset.d; showTasks(); }; });
+  const j = await api('/api/tasks?done=' + tasksDone);
+  if (!tasksDone) openTasks = j.items.length;
+  nav('tasks');
+  const tl = document.getElementById('tl');
+  if (!j.items.length) { tl.innerHTML = `<div class="empty"><b>${tasksDone ? 'Пока ничего не закрыто' : 'Открытых задач нет'}</b>${tasksDone ? '' : 'Задачи появляются сами из сводок записей'}</div>`; return; }
+  tl.innerHTML = `<div class="list" style="margin-top:14px">${j.items.map((t) => taskHtml(t, true)).join('')}</div>`;
+  bindTasks(tl, (row) => { nav('tasks'); setTimeout(() => { row.style.transition = 'opacity .25s'; row.style.opacity = '0'; setTimeout(() => row.remove(), 250); }, 500); });
+}
+
+/* ---------- роутер ---------- */
+async function route() {
+  const h = location.hash || '#/';
+  try {
+    if (!openTasks) await countTasks();
+    let m;
+    if ((m = /^#\/r\/(\d+)/.exec(h))) await showRec(m[1]);
+    else if (h.startsWith('#/tasks')) await showTasks();
+    else await showList();
+    window.scrollTo(0, 0);
+  } catch (e) { if (e.message !== 'auth') toast(e.message); }
+}
+window.addEventListener('hashchange', route);
+route();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+# Бэкенд диктофона. Сеть Traefik уже должна существовать (как у остальных ботов).
+services:
+  watchrec:
+    build: ./server
+    container_name: watchrec
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./data:/data        # аудио, расшифровки, очередь
+      - ./models:/models    # кэш моделей Whisper (скачается при первом запуске)
+    networks: [traefik]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:-traefik}
+      - traefik.http.routers.watchrec.rule=Host(`${REC_DOMAIN}`)
+      - traefik.http.routers.watchrec.entrypoints=${TRAEFIK_ENTRYPOINT:-websecure}
+      - traefik.http.routers.watchrec.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}
+      - traefik.http.services.watchrec.loadbalancer.server.port=8000
+    deploy:
+      resources:
+        limits:
+          cpus: "${WHISPER_CPUS:-4}"   # чтобы Whisper не задушил остальных ботов
+
+networks:
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:-traefik}

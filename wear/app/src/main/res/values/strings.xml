@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Диктофон</string>
+    <string name="tile_label">Запись</string>
+    <string name="channel_name">Запись звука</string>
+    <string name="recording_now">Идёт запись</string>
+    <string name="ready">Готов</string>
+    <string name="queued">В очереди: %d</string>
+    <string name="sending">Отправляю…</string>
+    <string name="need_mic">Нужен доступ к микрофону</string>
+</resources>
